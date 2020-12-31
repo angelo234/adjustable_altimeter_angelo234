@@ -1,0 +1,9 @@
+{
+  "name" : "Adjustable Altimeter",
+  "author": "angelo234",
+  "version": "1.0",
+  "description": "Displays your altitude and allows for zeroing.",
+  "directive": "adjustableAltimeterAngelo234",
+  "domElement": "<adjustable-altimeter-angelo234></adjustable-altimeter-angelo234>",
+  "css": { "width": "220px", "height": "110px", "top": "100px", "left": "100px"}
+}

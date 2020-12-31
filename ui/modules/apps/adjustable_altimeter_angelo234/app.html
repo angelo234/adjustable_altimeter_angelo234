@@ -1,0 +1,22 @@
+<div style="width:100%; height:100%;" layout="column" layout-align="center center" class="bngApp">
+	<span style="font-size:1.75em">{{ altitude }}</span>
+  <table style="width: 100%;">
+    <tr>
+      <td>
+        <td>
+          <md-button style="color: white; background-color: #ff6600" flex style="margin: 0px; min-width: 198px" md-no-ink class="md-raised"
+            ng-click="zero()">Zero
+            <md-tooltip>Offsets altitude from current value.</md-tooltip>
+          </md-button>
+        </td>
+        <td>
+            <md-button style="color: white; background-color: #ff0000" flex style="margin: 0px; min-width: 198px" md-no-ink class="md-raised"
+              ng-click="reset()">Reset
+              <md-tooltip>Undoes altitude zeroing.</md-tooltip>
+            </md-button>
+        </td>
+    </tr> 
+  </table>
+	<span>In feet <input type="checkbox" ng-model="infeet"></span>
+
+</div>
