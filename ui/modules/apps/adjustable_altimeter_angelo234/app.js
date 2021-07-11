@@ -1,50 +1,39 @@
 angular.module('beamng.apps')
-.directive('adjustableAltimeterAngelo234', ['bngApi', 'StreamsManager', 'UiUnits', function (bngApi, StreamsManager, UiUnits) {
+.directive('adjustableAltimeterAngelo234', [function () {
 return {
-templateUrl: 'modules/apps/adjustable_altimeter_angelo234/app.html',
+templateUrl: '/ui/modules/apps/adjustable_altimeter_angelo234/app.html',
 replace: true,
 restrict: 'EA',
 require: '^bngApp',
-link: function (scope, element, attrs, ctrl) {
+link: function (scope, element, attrs) {
+	var settings_file_path = "settings/adjustable_altimeter_angelo234/settings.json";
+	
 	// The current overlay screen the user is on (default: null)
 	scope.overlayScreen = null;	
-	
-	scope.infeet = false;
+
 	scope.altitude = 0;
 
 	//Altitude is subtracted from this value
 	var offset_altitude = 0;
 
-	var reset_flag = false;
+	var zeroed_flag = false;
 
-	var app_settings = null;
-
-	element.ready(function () {
-
-	ctrl.getSettings()
-	  .then(function (settings) {
-	    app_settings = settings;
-
-	    if(app_settings == null){
-	    	app_settings = {};
-	    	app_settings.infeet = false;
-	    	app_settings.offset_altitude = 0;
-	    }
-	    else{
-	    	scope.infeet = app_settings.infeet;
-			
-	    	//Check if on new map to reset altitude
-			bngApi.engineLua('adjustable_altimeter_angelo234_new_map', function(data) {
-				if(data){
-					bngApi.engineLua('adjustable_altimeter_angelo234_new_map = false');
-					offset_altitude = 0;
-				}
-				else{
-					offset_altitude = app_settings.offset_altitude;
-				}
-			});	
-	    }   
-	  })
+	element.ready(function () {	
+	
+		bngApi.engineLua("jsonReadFile('" + settings_file_path + "')", function(data) {
+			if(data !== undefined){
+				//Check if on new map to reset altitude
+				bngApi.engineLua('adjustable_altimeter_angelo234_new_map', function(new_map) {
+					if(new_map){
+						bngApi.engineLua('adjustable_altimeter_angelo234_new_map = false');
+						offset_altitude = 0;
+					}
+					else{
+						offset_altitude = data.offset_altitude;
+					}
+				});	
+			}
+		});		
 	});
 
 	var streamsList = ['electrics'];
@@ -55,7 +44,7 @@ link: function (scope, element, attrs, ctrl) {
 	}
 
 	scope.zero = function () {
-		reset_flag = true;		
+		zeroed_flag = true;		
 	};
 
 	scope.reset = function () {
@@ -64,26 +53,32 @@ link: function (scope, element, attrs, ctrl) {
 
 	scope.$on('streamsUpdate', function (event, streams) {
 		scope.$evalAsync(function () {
-			if(reset_flag){
+			if(zeroed_flag){
 				offset_altitude = getAltitude(streams);
-				reset_flag = false;
+				zeroed_flag = false;
 			}
 
 			var relative_altitude = getAltitude(streams) - offset_altitude;
 
+			var altitude_in_units = UiUnits.distance(relative_altitude);
+
 			//Convert to feet or meters
-			scope.altitude = Math.round((relative_altitude * (scope.infeet ? 3.28084 : 1)) * 100) / 100;
-			scope.altitude += " " + (scope.infeet ? "ft" : "m");
+			//scope.altitude = Math.round((relative_altitude * (scope.infeet ? 3.28084 : 1)) * 100) / 100;
+			scope.altitude = Math.round(altitude_in_units.val * 100) / 100;
+			scope.altitude += " " + altitude_in_units.unit;
 		})	
 	});
 
 	// Make sure we clean up after closing the app.
 	scope.$on('$destroy', function () {
 		StreamsManager.remove(streamsList);
-		app_settings.infeet = scope.infeet;
-		app_settings.offset_altitude = offset_altitude;
 		
-		ctrl.saveSettings(app_settings);
+		var data = {}
+		data.offset_altitude = offset_altitude;	
+		
+		data = JSON.stringify(data);
+		
+		bngApi.engineLua("writeFile('" + settings_file_path + "'," + "'" + data + "', true)");
 	});	
 },
 };
