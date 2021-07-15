@@ -1,5 +1,5 @@
 angular.module('beamng.apps')
-.directive('adjustableAltimeterAngelo234', [function () {
+.directive('adjustableAltimeterAngelo234', ['Settings', function (Settings) {
 return {
 templateUrl: '/ui/modules/apps/adjustable_altimeter_angelo234/app.html',
 replace: true,
@@ -60,12 +60,16 @@ link: function (scope, element, attrs) {
 
 			var relative_altitude = getAltitude(streams) - offset_altitude;
 
-			var altitude_in_units = UiUnits.distance(relative_altitude);
+			var altitude_in_units = relative_altitude;
+			var units = "m"
 
-			//Convert to feet or meters
-			//scope.altitude = Math.round((relative_altitude * (scope.infeet ? 3.28084 : 1)) * 100) / 100;
-			scope.altitude = Math.round(altitude_in_units.val * 100) / 100;
-			scope.altitude += " " + altitude_in_units.unit;
+			if (Settings.values.uiUnitLength === "imperial") {
+				altitude_in_units = relative_altitude * 3.28084;
+				units = "ft"
+			}
+
+			scope.altitude = (Math.round(altitude_in_units * 100) / 100).toFixed(2);
+			scope.altitude += " " + units;
 		})	
 	});
 
